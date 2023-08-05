@@ -5,9 +5,8 @@ require('dotenv').config(); // Load environment variables
 const app = express();
 
 // MongoDB Atlas Connection String
-const mongoUri = process.env.MONGO_URI.replace('<username>', 'your-username')
-                                      .replace('<password>', 'your-password');
-
+const mongoUri = process.env.MONGO_URI
+const port = process.env.PORT || 3000;
 // Connect to MongoDB Atlas
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
@@ -20,7 +19,8 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
 

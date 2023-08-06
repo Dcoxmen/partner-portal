@@ -1,12 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config(); // Load environment variables
+const {errorHandler} = require('./middleware/errorMiddleware');
 
 const app = express();
 
+app.use(express.json()); // Body parser middleware
+app.use(express.urlencoded({ extended: false }));
+
 // MongoDB Atlas Connection String
 const mongoUri = process.env.MONGO_URI
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 // Connect to MongoDB Atlas
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
@@ -16,8 +20,14 @@ mongoose.connect(mongoUri, {
   .catch(err => console.error('Could not connect to MongoDB Atlas:', err));
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.send(200).json({message: 'Welcome to the Partner Portal!'});
 });
+
+
+// Routes
+app.use('/api/users', require('./routes/userRoutes'));
+app.use(errorHandler)
+
 
 
 app.listen(port, () => {

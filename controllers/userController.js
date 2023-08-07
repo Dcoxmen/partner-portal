@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
 
 //@desc     Register user
 //@route    POST /api/v1/users/register
@@ -40,7 +41,7 @@ const registerUser = asyncHandler(async(req, res) => {
       lastName: user.lastName,
       email: user.email,
       isAdmin: user.isAdmin,
-      // token: generateToken(user._id)
+      token: generateToken(user._id)
     })
   }else{
     res.status(400).json({ msg: 'Invalid user data' });
@@ -67,7 +68,7 @@ const registerUser = asyncHandler(async(req, res) => {
         lastName: user.lastName,
         email: user.email,
         isAdmin: user.isAdmin,
-        // token: generateToken(user._id)
+        token: generateToken(user._id)
       })
     }else{
       res.status(401)
@@ -76,7 +77,28 @@ const registerUser = asyncHandler(async(req, res) => {
     
   })
 
+  //@desc     Get user dashboard
+  //@route    GET /api/users/dashboard
+  //@access   Private
+  const getDashboard = asyncHandler(async(req, res) => {
+    res.status(200).json({
+      id: req.user._id,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+      email: req.user.email,
+    
+    })
+  })
+
+  // Generate token
+  const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+      expiresIn: '20d'
+    })
+  }
+
   module.exports = {
     registerUser,
-    loginUser
+    loginUser,
+    getDashboard,
   }

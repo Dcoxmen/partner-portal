@@ -1,23 +1,80 @@
+const asyncHandler = require('express-async-handler');
+const bcrypt = require('bcryptjs');
+const User = require('../models/userModel');
+
 //@desc     Register user
 //@route    POST /api/v1/users/register
 //@access   Public
-const registerUser = (req, res) => {
+const registerUser = asyncHandler(async(req, res) => {
     
   const { firstName, lastName, email, password } = req.body;
 
   // Simple validation
   if (!firstName || !lastName || !email || !password) {
-    return res.status(400).json({ msg: 'Please enter all fields' });
-
-    res.send('Register Route');
+    res.status(400)
+    throw new Error('Please enter all fields')
   }
-}
+
+  // Check for existing user
+  const userExists = await User.findOne({ email })
+  if (userExists) { 
+    res.status(400)
+    throw new Error('User already exists')
+  }
+  // Create salt & hash
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  // Create user
+  const user = await User.create({
+    firstName,
+    lastName,
+    email,
+    password: hashedPassword
+  });
+
+  if (user) {
+    res.status(201).json({
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      // token: generateToken(user._id)
+    })
+  }else{
+    res.status(400).json({ msg: 'Invalid user data' });
+
+  }
+  
+})
+
+
 //@desc     Login user
 //@route    POST /api/v1/users/login
 //@access   Public
-  const loginUser = (req, res) => {
-    res.send('Login Route');
-  }
+  const loginUser = asyncHandler(async(req, res) => {
+
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    //Check user and password
+    if(user && (await bcrypt.compare(password, user.password))){
+      res.status(200).json({
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        // token: generateToken(user._id)
+      })
+    }else{
+      res.status(401)
+      throw new Error('Invalid credentials')
+    }
+    
+  })
 
   module.exports = {
     registerUser,
